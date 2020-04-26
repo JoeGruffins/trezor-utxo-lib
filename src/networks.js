@@ -160,5 +160,38 @@ module.exports = {
     scriptHash: 0x32,
     wif: 0xb0,
     coin: coins.LTC
+  },
+  decred: {
+    messagePrefix: '\x17Decred Signed Message:\n',
+    bip32: {
+      public: 0x02fda926,
+      private: 0x02fda4e8
+    },
+    pubKeyHash: 0x073f,
+    scriptHash: 0x071a,
+    wif: 0x22de,
+    coin: coins.DCR
+  },
+  decredTest: {
+    messagePrefix: '\x17Decred Signed Message:\n',
+    bip32: {
+      public: 0x043587d1,
+      private: 0x04358397
+    },
+    pubKeyHash: 0x0f21,
+    scriptHash: 0x0efc,
+    wif: 0x230e,
+    coin: coins.DCR
+  },
+  decredSim: {
+    messagePrefix: '\x17Decred Signed Message:\n',
+    bip32: {
+      public: 0x0420bd3d,
+      private: 0x0420b903
+    },
+    pubKeyHash: 0x0e91,
+    scriptHash: 0x0e6c,
+    wif: 0x2307,
+    coin: coins.DCR
   }
 }
