@@ -13,7 +13,8 @@ const coins = {
   CAPRICOIN: 'cpc',
   PEERCOIN: 'ppc',
   PEERCOINTEST: 'tppc',
-  KMD: 'kmd'
+  KMD: 'kmd',
+  DCR: 'dcr'
 }
 
 coins.isBitcoin = function (network) {
@@ -78,7 +79,8 @@ coins.isValidCoin = typeforce.oneOf(
   coins.isKomodo,
   coins.isZcashType,
   coins.isCapricoin,
-  coins.isPeercoin
+  coins.isPeercoin,
+  coins.isDecred
 )
 
 module.exports = coins
