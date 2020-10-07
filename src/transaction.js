@@ -1135,7 +1135,7 @@ Transaction.prototype.decredSigHashPrefixByteLength = function (hashType, ins, o
     }
     return sum
   }, 0)
-  byteLength += 4 + 4 // block height + block index
+  byteLength += 4 + 4 // locktime + expiry
   return byteLength
 }
 
