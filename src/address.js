@@ -10,7 +10,7 @@ var typeforce = require('typeforce')
 var types = require('./types')
 
 function fromBase58Check (address, network = null) {
-  var decode = network && coins.isDecred(network) ? bbs58checkBlake256.decodeBlake256 : bs58check.decode
+  var decode = network && coins.isDecred(network) ? bbs58checkBlake256.decodeBlake256Address : bs58check.decode
   var payload = decode(address)
 
   // TODO: 4.0.0, move to "toOutputScript"
@@ -51,7 +51,7 @@ function toBase58Check (hash, version, network = null) {
   multibyte ? payload.writeUInt16BE(version, 0) : payload.writeUInt8(version, 0)
   hash.copy(payload, offset)
 
-  var encode = network && coins.isDecred(network) ? bbs58checkBlake256.encodeBlake256 : bs58check.encode
+  const encode = network && coins.isDecred(network) ? bbs58checkBlake256.encodeBlake256 : bs58check.encode
   return encode(payload)
 }
 
