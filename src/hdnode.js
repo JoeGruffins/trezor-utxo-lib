@@ -59,7 +59,7 @@ HDNode.fromSeedHex = function (hex, network) {
 
 HDNode.fromBase58 = function (string, networks, skipValidation = false) {
   // FixMe: Issue #38, this method just pops the latest network object from the list instead of being more discerning.
-  const decode = networks && coins.isDecred(networks) ? bbs58checkBlake256.decodeBlake256Key : base58check.decode
+  const decode = networks && coins.isDecred(networks) ? bbs58checkBlake256.decodeBlake256 : base58check.decode
   var buffer = decode(string)
   var buffer = base58check.decode(string)
   if (buffer.length !== 78) throw new Error('Invalid buffer length')

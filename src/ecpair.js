@@ -1,5 +1,6 @@
 var baddress = require('./address')
 var bcrypto = require('./crypto')
+var bwifBlake256 = require('./wifBlake256')
 var coins = require('./coins')
 var ecdsa = require('./ecdsa')
 var randomBytes = require('randombytes')
@@ -87,7 +88,8 @@ ECPair.fromPrivateKeyBuffer = function (buffer, network) {
 }
 
 ECPair.fromWIF = function (string, network) {
-  var decoded = wif.decode(string)
+  var decode = network && coins.isDecred(network) ? bwifBlake256.decode : wif.decode
+  var decoded = decode(string)
   var version = decoded.version
 
   // list of networks?
@@ -172,7 +174,8 @@ ECPair.prototype.sign = function (hash) {
 ECPair.prototype.toWIF = function () {
   if (!this.d) throw new Error('Missing private key')
 
-  return wif.encode(this.network.wif, this.d.toBuffer(32), this.compressed)
+  const encode = this.network && coins.isDecred(this.network) ? bwifBlake256.encode : wif.encode
+  return encode(this.network.wif, this.d.toBuffer(32), this.compressed)
 }
 
 ECPair.prototype.verify = function (hash, signature) {

@@ -361,7 +361,7 @@ Transaction.fromBuffer = function (buffer, network = networks.bitcoin, __noStric
   }
 
   function readVout () {
-    var vout = {value: Transaction.USE_STRING_VALUES ? readUInt64asString() : readUInt64()}
+    var vout = {value: readUInt64()}
     if (coins.isDecred(network)) {
       vout.version = readUInt16()
       if (vout.version !== Transaction.DECRED_SCRIPT_VERSION) {
@@ -388,7 +388,7 @@ Transaction.fromBuffer = function (buffer, network = networks.bitcoin, __noStric
       if (count !== vinLen) throw new Error('Non equal number of ins and witnesses')
       tx.ins.forEach(function (vin) {
         vin.witness = {
-          value: Transaction.USE_STRING_VALUES ? readUInt64asString() : readUInt64(),
+          value: readUInt64(),
           height: readUInt32(),
           blockIndex: readUInt32(),
           script: readVarSlice()
