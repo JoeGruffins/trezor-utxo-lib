@@ -84,7 +84,6 @@ Transaction.ZCASH_NOTECIPHERTEXT_SIZE = 1 + 8 + 32 + 32 + 512 + 16
 Transaction.ZCASH_G1_PREFIX_MASK = 0x02
 Transaction.ZCASH_G2_PREFIX_MASK = 0x0a
 
-
 Transaction.DECRED_TX_VERSION = 1
 Transaction.DECRED_TX_SERIALIZE_FULL = 0
 Transaction.DECRED_TX_SERIALIZE_NO_WITNESS = 1
@@ -274,7 +273,6 @@ Transaction.fromBuffer = function (buffer, network = networks.bitcoin, __noStric
       throw new Error('Unsupported Zcash transaction')
     }
   }
-
 
   var hasWitnesses = false
   if (coins.isDecred(network)) {
@@ -636,10 +634,10 @@ Transaction.prototype.zcashTransactionByteLength = function () {
   return byteLength
 }
 
-Transaction.prototype.decredTransactionByteLength = function () {
+Transaction.prototype.decredTransactionByteLength = function (includeWitnesses) {
   var byteLength = 4 + varuint.encodingLength(this.ins.length) // version + nIns
   var nWitness = 0
-  const hasWitnesses = this.hasWitnesses()
+  const hasWitnesses = this.hasWitnesses() && includeWitnesses
   byteLength += this.ins.reduce(function (sum, input) {
     sum += 32 + 4 + 1 + 4 // prevOut hash + index + tree + sequence
     if (hasWitnesses) {
@@ -670,7 +668,7 @@ Transaction.prototype.__byteLength = function (__allowWitness) {
   }
 
   if (coins.isDecred(this.network)) {
-    return this.decredTransactionByteLength()
+    return this.decredTransactionByteLength(hasWitnesses)
   }
 
   return (
@@ -1213,9 +1211,7 @@ Transaction.prototype.hashForDecredSignature = function (inIdx, script, hashType
       buffW.writeUInt16(txOut.version)
       buffW.writeVarInt(0)
     } else {
-      if (Transaction.USE_STRING_VALUES) {
-        buffW.writeUInt64asString(txOut.value)
-      } else if (!txOut.valueBuffer) {
+      if (!txOut.valueBuffer) {
         buffW.writeUInt64(txOut.value)
       } else {
         buffW.writeSlice(txOut.valueBuffer)
@@ -1250,7 +1246,8 @@ Transaction.prototype.hashForDecredSignature = function (inIdx, script, hashType
 }
 
 Transaction.prototype.getHash = function () {
-  return bcrypto.hash256(this.__toBuffer(undefined, undefined, false))
+  var hashFn = coins.isDecred(this.network) ? bcrypto.blake256 : bcrypto.hash256
+  return hashFn(this.__toBuffer(undefined, undefined, false))
 }
 
 Transaction.prototype.getId = function () {
@@ -1268,6 +1265,7 @@ Transaction.prototype.__toBuffer = function (buffer, initialOffset, __allowWitne
   var offset = initialOffset || 0
   function writeSlice (slice) { offset += slice.copy(buffer, offset) }
   function writeUInt8 (i) { offset = buffer.writeUInt8(i, offset) }
+  function writeUInt16 (i) { offset = buffer.writeUInt16LE(i, offset) }
   function writeUInt32 (i) { offset = buffer.writeUInt32LE(i, offset) }
   function writeInt32 (i) { offset = buffer.writeInt32LE(i, offset) }
   function writeUInt64 (i) { offset = bufferutils.writeUInt64LE(buffer, i, offset) }
@@ -1293,6 +1291,13 @@ Transaction.prototype.__toBuffer = function (buffer, initialOffset, __allowWitne
     var mask = (this.overwintered ? 1 : 0)
     writeInt32(this.version | (mask << 31))  // Set overwinter bit
     writeUInt32(this.versionGroupId)
+  } else if (isDecred) {
+    writeUInt16(this.version)
+    if (!__allowWitness) {
+      writeUInt16(Transaction.DECRED_TX_SERIALIZE_NO_WITNESS)
+    } else {
+      writeUInt16(this.type)
+    }
   } else {
     writeInt32(this.version)
   }
@@ -1337,9 +1342,7 @@ Transaction.prototype.__toBuffer = function (buffer, initialOffset, __allowWitne
     if (isDecred) {
       writeVarInt(this.ins.length)
       this.ins.forEach(function (input) {
-        if (Transaction.USE_STRING_VALUES) {
-          writeUInt64asString(input.witness.value)
-        } else if (!input.witness.valueBuffer) {
+        if (!input.witness.valueBuffer) {
           writeUInt64(input.witness.value)
         } else {
           writeSlice(input.witness.valueBuffer)
