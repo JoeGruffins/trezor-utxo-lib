@@ -361,7 +361,7 @@ Transaction.fromBuffer = function (buffer, network = networks.bitcoin, __noStric
   }
 
   function readVout () {
-    var vout = {value: readUInt64()}
+    var vout = {value: Transaction.USE_STRING_VALUES ? readUInt64asString() : readUInt64()}
     if (coins.isDecred(network)) {
       vout.version = readUInt16()
       if (vout.version !== Transaction.DECRED_SCRIPT_VERSION) {
@@ -388,7 +388,7 @@ Transaction.fromBuffer = function (buffer, network = networks.bitcoin, __noStric
       if (count !== vinLen) throw new Error('Non equal number of ins and witnesses')
       tx.ins.forEach(function (vin) {
         vin.witness = {
-          value: readUInt64(),
+          value: Transaction.USE_STRING_VALUES ? readUInt64asString() : readUInt64(),
           height: readUInt32(),
           blockIndex: readUInt32(),
           script: readVarSlice()
@@ -681,10 +681,10 @@ Transaction.prototype.zcashTransactionByteLength = function () {
   return byteLength
 }
 
-Transaction.prototype.decredTransactionByteLength = function () {
+Transaction.prototype.decredTransactionByteLength = function (includeWitnesses) {
   var byteLength = 4 + varuint.encodingLength(this.ins.length) // version + nIns
   var nWitness = 0
-  const hasWitnesses = this.hasWitnesses()
+  const hasWitnesses = this.hasWitnesses() && includeWitnesses
   byteLength += this.ins.reduce(function (sum, input) {
     sum += 32 + 4 + 1 + 4 // prevOut hash + index + tree + sequence
     if (hasWitnesses) {
@@ -715,7 +715,7 @@ Transaction.prototype.__byteLength = function (__allowWitness) {
   }
 
   if (coins.isDecred(this.network)) {
-    return this.decredTransactionByteLength()
+    return this.decredTransactionByteLength(hasWitnesses)
   }
 
   return (
@@ -1306,7 +1306,8 @@ Transaction.prototype.hashForDecredSignature = function (inIdx, script, hashType
 }
 
 Transaction.prototype.getHash = function () {
-  return bcrypto.hash256(this.__toBuffer(undefined, undefined, false))
+  var hashFn = coins.isDecred(this.network) ? bcrypto.blake256 : bcrypto.hash256
+  return hashFn(this.__toBuffer(undefined, undefined, false))
 }
 
 Transaction.prototype.getId = function () {
@@ -1355,6 +1356,13 @@ Transaction.prototype.__toBuffer = function (buffer, initialOffset, __allowWitne
   } else if (this.isDashSpecialTransaction()) {
     writeUInt16(this.version)
     writeUInt16(this.type)
+  } else if (isDecred) {
+    writeUInt16(this.version)
+    if (!__allowWitness) {
+      writeUInt16(Transaction.DECRED_TX_SERIALIZE_NO_WITNESS)
+    } else {
+      writeUInt16(this.type)
+    }
   } else {
     writeInt32(this.version)
   }

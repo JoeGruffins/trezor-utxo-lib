@@ -11,8 +11,8 @@ function decodeRaw (buffer, version) {
   if (buffer.length !== 35) throw new Error('Invalid WIF length')
 
   return {
-    version: (buffer[0]<<8) + buffer[1], // Int expected for version???
-    privateKey: buffer.slice(3, 35),
+    version: buffer.slice(2),
+    privateKey: buffer.slice(3, 35)
   }
 }
 
