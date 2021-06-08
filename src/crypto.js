@@ -1,6 +1,5 @@
 var blakeHash = require('blake-hash')
 var createHash = require('create-hash')
-var crypto = require('crypto')
 
 function ripemd160 (buffer) {
   var hash = 'rmd160'
